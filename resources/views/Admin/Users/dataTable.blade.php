@@ -11,9 +11,32 @@
     </thead>
     <tbody>
 
+
+{{--    @if($counter > 0)--}}
+{{--        @php $counter = $counter; @endphp--}}
+
+{{--    @elseif($counter == 0)--}}
+{{--        @php $counter = 0; @endphp--}}
+
+{{--    @endif--}}
+
+    @php $counter = 0; @endphp
+
     @foreach($data as $row)
+
+{{--        @if($newPage > $currentPage)--}}
+        @php $counter = $counter+1; @endphp
+
+{{--        @endif--}}
+
+{{--        @if($newPage < $currentPage)--}}
+{{--            @php $counter = $counter+1; @endphp--}}
+
+{{--        @else--}}
+{{--            @php $counter = $counter+1; @endphp--}}
+{{--            @endif--}}
         <tr>
-            <th scope="row">{{ $row->id }}</th>
+            <th scope="row">{{ $counter }}</th>
             <td>{{ $row->name }}</td>
             <td>{{ $row->user_name }}</td>
             <td>{{ $row->email }}</td>
@@ -35,3 +58,11 @@
 
     </tbody>
 </table>
+{{--<input type="text" id="generalCounter" value="{{ $counter }}">--}}
+{{--<input type="hidden" id="generalPage" value="{{ $newPage }}">--}}
+
+<div class="row d-flex justify-content-center">
+    <div class="col-xs-12">
+        {!! $data->links() !!}
+    </div>
+</div>

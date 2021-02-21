@@ -636,6 +636,8 @@ License: You must have a valid license purchased only from themeforest(the above
 		<!-- begin::Page Loader -->
         @yield('js')
 		<script>
+
+            var m_url = "{{URL::to('/')}}";
 			$(window).on('load', function() {
 				$('body').removeClass('m-page--loading');
 			});

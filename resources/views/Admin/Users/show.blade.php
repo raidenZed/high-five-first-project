@@ -3,7 +3,7 @@
 @section('contents')
 
     @include('Admin.Users.sub.store')
-    @include('Admin.Users.sub.update')
+{{--    @include('Admin.Users.sub.update')--}}
 
     <div class="m-grid__item m-grid__item--fluid m-wrapper">
 
@@ -16,8 +16,9 @@
                     <h3 class="m-subheader__title ">المستخدمين</h3>
                 </div>
                 <div>
-
+                    @can('add users')
                     <button type="button" class="btn m-btn--square  btn-success" id="openUserAddModal">إضافة مستخدم</button>
+                    @endcan
 {{--								<span class="m-subheader__daterange" id="m_dashboard_daterangepicker">--}}
 {{--									<span class="m-subheader__daterange-label">--}}
 {{--										<span class="m-subheader__daterange-title"></span>--}}
@@ -38,7 +39,7 @@
             <div class="row">
 
                 <div class="col-xl-12">
-                    <div class="table-responsive" id="tableBody">
+                    <div class="" id="tableBody">
                         <table class="table table-bordered m-table">
                             <thead>
                             <tr>
@@ -51,17 +52,20 @@
                             </tr>
                             </thead>
                             <tbody>
-
+                            @php $counter = 0; @endphp
                             @foreach($data as $row)
+                                @php $counter = $counter+1; @endphp
                                 <tr>
-                                    <th scope="row">{{ $row->id }}</th>
+                                    <th scope="row">{{ $counter }}</th>
                                     <td>{{ $row->name }}</td>
                                     <td>{{ $row->user_name }}</td>
                                     <td>{{ $row->email }}</td>
                                     <td>
+                                        @can('edit users')
                                         <a href="#" class="btn btn-accent m-btn m-btn--icon m-btn--icon-only m-btn--custom m-btn--pill m-btn--air userEdit" id="{{ $row->id }}">
                                             <i class="la la-edit"></i>
                                         </a>
+                                            @endcan
 
                                     </td>
                                     <td>
@@ -76,6 +80,16 @@
 
                             </tbody>
                         </table>
+
+{{--                        <input type="hidden" id="generalCounter" value="{{ $counter }}">--}}
+                        <input type="hidden" id="generalPage" value="1">
+
+
+                        <div class="row d-flex justify-content-center">
+                            <div class="col-xs-12">
+                                {!! $data->links() !!}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -119,15 +133,40 @@
                 "hideMethod": "fadeOut"
             };
 
+            var generalUserUrl = "{{ route('user.index') }}";
+
+
             var FormUserStore = {
                 init: function () {
 
-
                     $("#submitUserStore").click(function (e) {
                         e.preventDefault();
-                        let form = $(this).closest("form"), accct=form.attr('action') ,  t=$(this);
-                        // var table = $("#m_table_1").DataTable()
 
+
+
+                        // $("#m_form_1_msg").addClass("m--hide")
+                        var form = $(this).closest("form"), accct=form.attr('action') ,  t=$(this);
+
+
+                        // var table = $("#m_table_1").DataTable()
+                        let userId = $("#user_id").val();
+
+                        let urlAjax = "";
+
+                        if(userId == 0) {
+                            console.log("hello");
+                            urlAjax = "{{ route("user.store") }}";
+
+                        }else {
+                            urlAjax = m_url+"/Dashboard/Users/update/"+userId;
+
+                        }
+
+
+
+
+                        {{--                            urlAjax = "{{ route("user.store") }}";--}}
+                        //                             console.log(userId)
                         form.validate({
                             rules: {
                                 name: {
@@ -149,11 +188,16 @@
                                 },
 
                                 password: {
-                                    required: !0,
-                                    min:8
+                                    required: () => {
+                                        return $("#user_id").val() == 0;
+
+                                    },
+                                    minlength:8
                                 },
                                 cpassword:{
-                                    required:!0,
+                                    required: () => {
+                                        return $("#user_id").val() == 0;
+                                    },
                                     equalTo:"#password"
                                 },
 
@@ -181,7 +225,7 @@
 
                                 password: {
                                     required: "هذا الحقل مطلوب",
-                                    min: "كلمة المرور أقل شئ 8"
+                                    minlength: "كلمة المرور أقل شئ 8"
                                 },
                                 cpassword: {
                                     required: "هذا الحقل مطلوب",
@@ -191,14 +235,16 @@
                             },
                             invalidHandler: function (e,r) {
 
-                                toastr.error("خطأ عام");
+                                // toastr.error("خطأ عام");
 
 
                             }
                         });
+
+
                         if(form.valid()) {
                             form.ajaxSubmit({
-                                url:"{{ route("user.store") }}",
+                                url:urlAjax,
                                 method: 'POST',
                                 headers: {
                                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr("content")
@@ -216,10 +262,20 @@
                                     console.log(data);
                                     t.removeClass('m-loader');
 
-                                    $("#m_user_store_modal").modal("hide");
+                                    if(data.status == true) {
+
+                                        $("#m_user_store_modal").modal("hide");
+
+                                        getData(generalUserUrl);
+
+                                        swal({title: "تمت العملية بنجاح" , text:data.msg , type: "success" , confirmButtonText:"تم" , confirmButtonClass: "swal2-confirm btn btn-success m-btn m-btn--custom"});
+
+                                    }
 
 
-                                    $("#tableBody").empty().append(data);
+
+
+
                                     form.clearForm(),form.validate().resetForm();
                                     // toastr.success("");
                                     //
@@ -228,18 +284,38 @@
 
                                 },error: function (response) {
                                     // console.log(response.responseJSON.errors);
-                                    console.log(response.responseJSON)
-                                    if(response.responseJSON.errors.first_name) {
-                                        toastr.error(response.responseJSON.errors.first_name);
-                                    }else if(response.responseJSON.errors.father_name) {
-                                        toastr.error(response.responseJSON.errors.first_name);
-                                    }else if(response.responseJSON.errors.family_name) {
-                                        toastr.error(response.responseJSON.errors.family_name);
-                                    }else if(response.responseJSON.errors.email) {
-                                        toastr.error(response.responseJSON.errors.email);
-                                    }else if(response.responseJSON.errors.password) {
-                                        toastr.error(response.responseJSON.errors.password);
+                                    console.log(response.responseJSON);
+
+                                    t.removeClass('m-loader');
+
+
+                                    if(response.status == 422) {
+
+                                        // $("#m_form_1_msg").removeClass("m--hide");
+
+                                        let ul = "<ul>";
+                                        for(let i in response.responseJSON.errors) {
+                                            ul += "<li>"+response.responseJSON.errors[i]+"</li>";
+                                        }
+
+                                        ul += "</ul>";
+
+                                        swal({title: "الرجاء التأكد من البيانات" , html:ul , type: "error" , confirmButtonText:"تم" , confirmButtonClass: "swal2-confirm btn btn-success m-btn m-btn--custom"});
+
+
+                                        // i(l,"danger","");
                                     }
+                                    // if(response.responseJSON.errors.name) {
+                                    //     toastr.error(response.responseJSON.errors.name);
+                                    // }else if(response.responseJSON.errors.user_name) {
+                                    //     toastr.error(response.responseJSON.errors.user_name);
+                                    // }else if(response.responseJSON.errors.mobile) {
+                                    //     toastr.error(response.responseJSON.errors.mobile);
+                                    // }else if(response.responseJSON.errors.email) {
+                                    //     toastr.error(response.responseJSON.errors.email);
+                                    // }else if(response.responseJSON.errors.password) {
+                                    //     toastr.error(response.responseJSON.errors.password);
+                                    // }
 
                                     mApp.unblock("#m_blockui_4_4_modal .modal-content");
                                 }
@@ -248,19 +324,33 @@
 
                     });
 
+
+                }
+            };
+            var FormUserUpdate = {
+                init: function () {
+
+
+
+
                 }
             };
             $(document).ready(() => {
+
 
                 FormUserStore.init();
 
 
 
 
+
                 $(document).on('click' , '#openUserAddModal' , e => {
                     e.preventDefault();
+                    $("#formUser").clearForm();
 
-
+                    $("#user_id").val(0);
+                    $("#exampleModalLabel").text("إضافة مستخدم");
+                    $("#submitUserUpdate").attr("id" , "submitUserStore");
                     $("#m_user_store_modal").modal("show");
                 });
 
@@ -268,6 +358,9 @@
                     e.preventDefault();
                     var $this = $(e.currentTarget);
                     let id = $this.attr('id');
+
+                    $("#formUserStore").clearForm();
+
                     $.ajax({
                         url: "{{ route('fetch.user.by.id.data') }}",
                         data: {id: id},
@@ -285,30 +378,153 @@
                         },
                         success: function (data) {
                             console.log(data);
+                            $("#exampleModalLabel").text("تعديل المستخدم");
 
-                            $("#m_user_update_modal").modal("show");
+                            $("#m_user_store_modal").modal("show");
 
-                            $("#name_edit").val(data.name);
-                            $("#user_name_edit").val(data.user_name);
-                            $("#email_edit").val(data.email);
-                            $("#mobile_edit").val(data.mobile);
+                            $("#name").val(data.name);
+                            $("#user_name").val(data.user_name);
+                            $("#email").val(data.email);
+                            $("#mobile").val(data.mobile);
                             $("#user_id").val(data.id);
 
 
 
                             mApp.unblock("#tableBody .table");
 
-                        },error: function (data) {
-                            console.log(data)
-                            toastr.error(data.responseJSON.errors);
+                        },error: function (response) {
+                            console.log(response)
+
+                            if(response.status == 422) {
+
+
+                                let ul = "<ul>";
+                                for(let i in response.responseJSON.errors) {
+                                    ul += "<li>"+response.responseJSON.errors[i]+"</li>";
+                                }
+
+                                ul += "</ul>";
+
+                                swal({title: "خطأ عام" , html:ul , type: "error" , confirmButtonText:"تم" , confirmButtonClass: "swal2-confirm btn btn-success m-btn m-btn--custom"});
+
+
+                            }
                             mApp.unblock("#tableBody .table");
+
+
+                        }
+
+                    });
+                });
+                $(document).on('click' , '.userDelete' , e => {
+                    e.preventDefault();
+                    var $this = $(e.currentTarget);
+                    let id = $this.attr('id');
+
+                    $.ajax({
+                        url: "{{ route('delete.user.by.id.data') }}",
+                        data: {id: id},
+                        type: 'get',
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr("content")
+                        },
+                        beforeSend: function ( xhr ) {
+                            mApp.block("#tableBody .table" , {
+                                overlayColor:"#000000",
+                                type:"loader",
+                                state:"success",
+                                message:"Please wait..."
+                            });
+                        },
+                        success: function (data) {
+                            console.log(data);
+
+
+                           if(data.status === true) {
+                               getData();
+                               swal({title: "تمت العملية بنجاح" , text:data.msg , type: "success" , confirmButtonText:"تم" , confirmButtonClass: "swal2-confirm btn btn-success m-btn m-btn--custom"});
+
+                           }
+
+
+
+                            mApp.unblock("#tableBody .table");
+
+                        },error: function (response) {
+                            console.log(response)
+
+                            if(response.status == 422) {
+
+
+                                let ul = "<ul>";
+                                for(let i in response.responseJSON.errors) {
+                                    ul += "<li>"+response.responseJSON.errors[i]+"</li>";
+                                }
+
+                                ul += "</ul>";
+
+                                swal({title: "خطأ عام" , html:ul , type: "error" , confirmButtonText:"تم" , confirmButtonClass: "swal2-confirm btn btn-success m-btn m-btn--custom"});
+
+
+                            }
+                            mApp.unblock("#tableBody .table");
+
+
                         }
 
                     });
                 });
 
+                $(document).on('click' , '.pagination a' , e => {
+
+                    e.preventDefault();
+                    var $this = $(e.currentTarget);
+                    var page = $this.attr('href').split('page=')[1];
+
+                    let generalCounter = $("#generalCounter").val();
+                    let generalPage = $("#generalPage").val();
+                    let newPage = page;
+
+                    let paginateUserUrl = "{{ route('user.index') }}?page="+page;
+                    getData(paginateUserUrl , generalCounter , generalPage , newPage);
+
+                });
+
 
             });
+
+            function getData(url , counter , currentPage , newPage) {
+                $.ajax({
+                    url: url,
+                    data: {counter: counter , currentPage: currentPage , newPage: newPage},
+                    type: 'get',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr("content")
+                    },
+                    beforeSend: function ( xhr ) {
+                        mApp.block("#tableBody .table" , {
+                            overlayColor:"#000000",
+                            type:"loader",
+                            state:"success",
+                            message:"Please wait..."
+                        });
+                    },
+                    success: function (data) {
+
+                        $("#tableBody").empty().append(data);
+
+
+
+                        mApp.unblock("#tableBody .table");
+
+                    },error: function (data) {
+                        console.log(data)
+                        toastr.error(data.responseJSON.errors);
+                        mApp.unblock("#tableBody .table");
+                    }
+
+                });
+            }
 
             function isNumberKey(evt){
                 var charCode = (evt.which) ? evt.which : event.keyCode
