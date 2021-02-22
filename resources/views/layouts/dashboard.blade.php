@@ -471,8 +471,9 @@ License: You must have a valid license purchased only from themeforest(the above
 
 
                                         </li>
-										<li class="m-menu__item {{Request::is('Dashboard/Users/show') ? 'm-menu__item--active m-menu__item--active-tab' : '' }}  m-menu__item--submenu m-menu__item--tabs" >
-											<a href="{{ url('/Dashboard/Users/show') }}" class="m-menu__link ">
+                                        @can("users")
+										<li class="m-menu__item {{Request::is('Dashboard/Users/index') ? 'm-menu__item--active m-menu__item--active-tab' : '' }}  m-menu__item--submenu m-menu__item--tabs" >
+											<a href="{{ url('/Dashboard/Users/index') }}" class="m-menu__link ">
 {{--                                                m-menu__toggle--}}
 												<span class="m-menu__link-text">المستخدمين</span>
 												<i class="m-menu__hor-arrow la la-angle-down"></i>
@@ -483,6 +484,7 @@ License: You must have a valid license purchased only from themeforest(the above
 
 											</div>
 										</li>
+                                        @endcan
 {{--										<li class="m-menu__item  m-menu__item--submenu m-menu__item--tabs" m-menu-submenu-toggle="tab" aria-haspopup="true">--}}
 {{--											<a href="javascript:;" class="m-menu__link m-menu__toggle" title="Non functional dummy link">--}}
 {{--												<span class="m-menu__link-text">Reports</span>--}}

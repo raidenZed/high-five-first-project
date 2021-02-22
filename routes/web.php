@@ -20,11 +20,14 @@ Route::prefix('Dashboard')->group(function () {
             return view('Admin.welcome');
         });
         Route::prefix('Users')->group(function () {
-            Route::get('/show' , 'Admin\UserController@index')->name("user.index");
-            Route::post('/store' , 'Admin\UserController@store')->name("user.store");
-            Route::get('/fetchById' , 'Admin\UserController@fetchById')->name('fetch.user.by.id.data');
-            Route::post('/update/{id}' , 'Admin\UserController@update')->name("user.update");
-            Route::get('/delete' , 'Admin\UserController@delete')->name("delete.user.by.id.data");
+//            ->middleware("can:index users")
+            Route::get('/index' , 'Admin\UserController@index')->name("user.index")->middleware("permission:view_users");
+            Route::post('/add' , 'Admin\UserController@add')->name("user.store")->middleware("permission:add_users");
+            Route::get('/edit' , 'Admin\UserController@edit')->name('fetch.user.by.id.data')->middleware("permission:edit_users");
+            Route::post('/update/{id}' , 'Admin\UserController@update')->name("user.update")->middleware("permission:edit_users");
+            Route::get('/delete' , 'Admin\UserController@delete')->name("delete.user.by.id.data")->middleware("permission:delete_users");
+            Route::get('/Permissions' , 'Admin\UserController@getPermissions')->name("get.user.permissions")->middleware("permission:privileges_users");
+            Route::post('/Permissions/change' , 'Admin\UserController@changePermissions')->name("change.user.permissions")->middleware("permission:privileges_users");
 
         });
         Route::get('/logout' , 'Auth\LoginController@logout')->name('logout');

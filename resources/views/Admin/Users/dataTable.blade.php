@@ -5,8 +5,15 @@
         <th>الإسم الكامل</th>
         <th>إسم المستخدم</th>
         <th>البريد الإلكتروني</th>
-        <th>تعديل</th>
-        <th>حذف</th>
+        @can('edit_users')
+            <th>تعديل</th>
+        @endcan
+        @can('privileges_users')
+            <th>الصلاحيات</th>
+        @endcan
+        @can('delete_users')
+            <th>حذف</th>
+        @endcan
     </tr>
     </thead>
     <tbody>
@@ -40,17 +47,33 @@
             <td>{{ $row->name }}</td>
             <td>{{ $row->user_name }}</td>
             <td>{{ $row->email }}</td>
-            <td>
-                <a href="#" class="btn btn-accent m-btn m-btn--icon m-btn--icon-only m-btn--custom m-btn--pill m-btn--air userEdit" id="{{ $row->id }}">
-                    <i class="la la-edit"></i>
-                </a>
+            @can('edit_users')
+                <td>
 
-            </td>
-            <td>
-                <a href="#" class="btn btn-danger m-btn m-btn--icon m-btn--icon-only m-btn--custom m-btn--pill m-btn--air userDelete" id="{{ $row->id }}">
-                    <i class="la la-trash"></i>
-                </a>
-            </td>
+                    <a href="#" class="btn btn-accent m-btn m-btn--icon m-btn--icon-only m-btn--custom m-btn--pill m-btn--air userEdit" id="{{ $row->id }}">
+                        <i class="la la-edit"></i>
+                    </a>
+
+
+                </td>
+            @endcan
+            @can('privileges_users')
+                <td>
+
+                    <a href="#" class="btn btn-success m-btn m-btn--icon m-btn--icon-only m-btn--custom m-btn--pill m-btn--air userPrivileges" id="{{ $row->id }}">
+                        <i class="la la-user"></i>
+                    </a>
+                </td>
+            @endcan
+            @can('delete_users')
+                <td>
+
+                    <a href="#" class="btn btn-danger m-btn m-btn--icon m-btn--icon-only m-btn--custom m-btn--pill m-btn--air userDelete" id="{{ $row->id }}">
+                        <i class="la la-trash"></i>
+                    </a>
+
+                </td>
+            @endcan
         </tr>
     @endforeach
 

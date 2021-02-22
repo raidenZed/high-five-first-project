@@ -3,7 +3,7 @@
 @section('contents')
 
     @include('Admin.Users.sub.store')
-{{--    @include('Admin.Users.sub.update')--}}
+    @include('Admin.Users.sub.permissions')
 
     <div class="m-grid__item m-grid__item--fluid m-wrapper">
 
@@ -16,7 +16,7 @@
                     <h3 class="m-subheader__title ">المستخدمين</h3>
                 </div>
                 <div>
-                    @can('add users')
+                    @can('add_users')
                     <button type="button" class="btn m-btn--square  btn-success" id="openUserAddModal">إضافة مستخدم</button>
                     @endcan
 {{--								<span class="m-subheader__daterange" id="m_dashboard_daterangepicker">--}}
@@ -35,6 +35,8 @@
         <!-- END: Subheader -->
         <div class="m-content">
 
+
+
             <!--Begin::Section-->
             <div class="row">
 
@@ -47,8 +49,15 @@
                                 <th>الإسم الكامل</th>
                                 <th>إسم المستخدم</th>
                                 <th>البريد الإلكتروني</th>
+                                @can('edit_users')
                                 <th>تعديل</th>
+                                @endcan
+                                @can('privileges_users')
+                                <th>الصلاحيات</th>
+                                @endcan
+                                @can('delete_users')
                                 <th>حذف</th>
+                                @endcan
                             </tr>
                             </thead>
                             <tbody>
@@ -60,19 +69,33 @@
                                     <td>{{ $row->name }}</td>
                                     <td>{{ $row->user_name }}</td>
                                     <td>{{ $row->email }}</td>
+                                    @can('edit_users')
                                     <td>
-                                        @can('edit users')
+
                                         <a href="#" class="btn btn-accent m-btn m-btn--icon m-btn--icon-only m-btn--custom m-btn--pill m-btn--air userEdit" id="{{ $row->id }}">
                                             <i class="la la-edit"></i>
                                         </a>
-                                            @endcan
+
 
                                     </td>
+                                    @endcan
+                                    @can('privileges_users')
                                     <td>
+
+                                        <a href="#" class="btn btn-success m-btn m-btn--icon m-btn--icon-only m-btn--custom m-btn--pill m-btn--air userPrivileges" id="{{ $row->id }}">
+                                            <i class="la la-user"></i>
+                                        </a>
+                                    </td>
+                                    @endcan
+                                    @can('delete_users')
+                                    <td>
+
                                         <a href="#" class="btn btn-danger m-btn m-btn--icon m-btn--icon-only m-btn--custom m-btn--pill m-btn--air userDelete" id="{{ $row->id }}">
                                             <i class="la la-trash"></i>
                                         </a>
+
                                     </td>
+                                    @endcan
                                 </tr>
                             @endforeach
 
@@ -112,6 +135,40 @@
     </div>
     @endsection
 
+@section('style')
+
+    <style>
+        #permissionView .parentDiv {
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        #permissionView .parent_checkbox {
+            padding-right: 0px;
+            /*margin-bottom: 5px;*/
+        }
+
+        #permissionView .chiled_checkbox {
+            margin-top: 18px;
+            padding-right: 15px;
+        }
+
+        .m-checkbox-inline .m-checkbox, .m-checkbox-inline .m-radio, .m-radio-inline .m-checkbox, .m-radio-inline .m-radio {
+            margin-bottom: 10px;
+            margin-left: 0px;
+        }
+
+        #permissionView .mainParent {
+            margin-bottom: 30px;
+        }
+
+        @media (min-width: 992px) {
+            .modal-lg {
+                max-width: 900px;
+            }
+        }
+
+    </style>
+@endsection
     @section('js')
 
         <script>
@@ -327,11 +384,143 @@
 
                 }
             };
-            var FormUserUpdate = {
+            var FormUserPermission = {
                 init: function () {
 
 
+                    $("#submitUserPermission").click(function (e) {
+                        e.preventDefault();
 
+
+
+                        // $("#m_form_1_msg").addClass("m--hide")
+                        var form = $(this).closest("form"), accct=form.attr('action') ,  t=$(this);
+
+
+
+
+
+
+
+
+
+                        {{--                            urlAjax = "{{ route("user.store") }}";--}}
+                        //                             console.log(userId)
+                        form.validate({
+                            rules: {
+                                "permission[]": {
+                                    required: !0
+                                },
+
+
+
+
+
+                            },
+                            messages: {
+                                "permission[]": {
+                                    required: "",
+                                },
+
+
+
+                            },
+                            invalidHandler: function (e,r) {
+
+                                // toastr.error("خطأ عام");
+
+                                swal({title: "الرجاء التأكد من البيانات" , text:"قم بتحديد صلاحية واحدة على الأقل" , type: "error" , confirmButtonText:"تم" , confirmButtonClass: "swal2-confirm btn btn-success m-btn m-btn--custom"});
+
+
+
+                            }
+                        });
+
+
+                        if(form.valid()) {
+                            form.ajaxSubmit({
+                                url:"{{ route("change.user.permissions") }}",
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr("content")
+                                },
+                                beforeSend: function ( xhr ) {
+
+                                    t.addClass('m-loader');
+
+
+
+
+                                },
+                                success: function (data) {
+
+                                    console.log(data);
+                                    t.removeClass('m-loader');
+
+                                    if(data.status == true) {
+
+                                        $("#m_user_permissions_modal").modal("hide");
+
+                                        // getData(generalUserUrl);
+
+                                        swal({title: "تمت العملية بنجاح" , text:data.msg , type: "success" , confirmButtonText:"تم" , confirmButtonClass: "swal2-confirm btn btn-success m-btn m-btn--custom"});
+
+                                    }else {
+                                        swal({title: "خطأ عام" , text:data.msg , type: "error" , confirmButtonText:"تم" , confirmButtonClass: "swal2-confirm btn btn-success m-btn m-btn--custom"});
+
+                                    }
+
+
+
+
+
+                                    form.clearForm(),form.validate().resetForm();
+                                    // toastr.success("");
+                                    //
+                                    // toastr.error(data.errorMessage);
+
+
+                                },error: function (response) {
+                                    // console.log(response.responseJSON.errors);
+                                    console.log(response.responseJSON);
+
+                                    t.removeClass('m-loader');
+
+
+                                    if(response.status == 422) {
+
+                                        // $("#m_form_1_msg").removeClass("m--hide");
+
+                                        let ul = "<ul>";
+                                        for(let i in response.responseJSON.errors) {
+                                            ul += "<li>"+response.responseJSON.errors[i]+"</li>";
+                                        }
+
+                                        ul += "</ul>";
+
+                                        swal({title: "الرجاء التأكد من البيانات" , html:ul , type: "error" , confirmButtonText:"تم" , confirmButtonClass: "swal2-confirm btn btn-success m-btn m-btn--custom"});
+
+
+                                        // i(l,"danger","");
+                                    }
+                                    // if(response.responseJSON.errors.name) {
+                                    //     toastr.error(response.responseJSON.errors.name);
+                                    // }else if(response.responseJSON.errors.user_name) {
+                                    //     toastr.error(response.responseJSON.errors.user_name);
+                                    // }else if(response.responseJSON.errors.mobile) {
+                                    //     toastr.error(response.responseJSON.errors.mobile);
+                                    // }else if(response.responseJSON.errors.email) {
+                                    //     toastr.error(response.responseJSON.errors.email);
+                                    // }else if(response.responseJSON.errors.password) {
+                                    //     toastr.error(response.responseJSON.errors.password);
+                                    // }
+
+                                    mApp.unblock("#m_blockui_4_4_modal .modal-content");
+                                }
+                            });
+                        }
+
+                    });
 
                 }
             };
@@ -339,6 +528,7 @@
 
 
                 FormUserStore.init();
+                FormUserPermission.init();
 
 
 
@@ -346,7 +536,7 @@
 
                 $(document).on('click' , '#openUserAddModal' , e => {
                     e.preventDefault();
-                    $("#formUser").clearForm();
+                    $("#formUserStore").clearForm();
 
                     $("#user_id").val(0);
                     $("#exampleModalLabel").text("إضافة مستخدم");
@@ -490,8 +680,98 @@
 
                 });
 
+                $(document).on('click' , '.userPrivileges' , e => {
+                    e.preventDefault();
+                    var $this = $(e.currentTarget);
+                    let id = $this.attr('id');
+                    $("#user_id_permission").val(id);
 
+                    $.ajax({
+                        url: "{{ route('get.user.permissions') }}",
+                        data: {id: id},
+                        type: 'get',
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr("content")
+                        },
+                        beforeSend: function ( xhr ) {
+                            mApp.block("#tableBody .table" , {
+                                overlayColor:"#000000",
+                                type:"loader",
+                                state:"success",
+                                message:"Please wait..."
+                            });
+                        },
+                        success: function (data) {
+                            // console.log(data);
+
+                            $("#m_user_permissions_modal").modal("show");
+
+                            $("#permissionView").empty().html(data);
+
+
+                            mApp.unblock("#tableBody .table");
+
+                        },error: function (response) {
+                            // console.log(response)
+
+                            if(response.status == 422) {
+
+
+                                let ul = "<ul>";
+                                for(let i in response.responseJSON.errors) {
+                                    ul += "<li>"+response.responseJSON.errors[i]+"</li>";
+                                }
+
+                                ul += "</ul>";
+
+                                swal({title: "خطأ عام" , html:ul , type: "error" , confirmButtonText:"تم" , confirmButtonClass: "swal2-confirm btn btn-success m-btn m-btn--custom"});
+
+
+                            }
+                            mApp.unblock("#tableBody .table");
+
+
+                        }
+
+                    });
+                });
+
+                $(document).on('change' , '.parentCheckVal' , e => {
+                    var $this = $(e.currentTarget);
+                    let group = $this.attr('title');
+                    if($this.is(":checked")) {
+
+                        $(".childCheckVal:input[title="+group+"]").prop("checked" , true);
+
+                    }else {
+
+                        $(".childCheckVal:input[title="+group+"]").prop("checked" , false);
+
+                    }
+
+
+                });
+
+                $(document).on('change' , '.childCheckVal' , e => {
+                    let $this = $(e.currentTarget);
+                    let group = $this.attr("title");
+                    let checkChildren = $(".childCheckVal:input[title="+group+"]:checked");
+
+                    if(checkChildren.length > 0) {
+                        checkChildren.parent().parent().parent().find(".parentDiv").find(".parentCheckVal").prop("checked" , true);
+
+                    }else {
+                        $this.parent().parent().parent().find(".parentDiv").find(".parentCheckVal").prop("checked" , false);
+
+                    }
+                    // $(".childCheckVal:").each((index , element) => {
+                    //
+                    // });
+
+                });
             });
+
+
 
             function getData(url , counter , currentPage , newPage) {
                 $.ajax({

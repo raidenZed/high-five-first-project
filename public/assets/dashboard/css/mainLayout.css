@@ -28,6 +28,15 @@ span {
     /*transition: all 300ms ease;*/
 }
 
+.m-checkbox>span:after {
+    webkit-transform: rotate(
+        -45deg
+    );
+    transform: rotate(
+        45deg
+    );
+}
+
 @media (min-width: 1025px) {
     /*.m-header .m-header__bottom {*/
     /*    padding: 0;*/

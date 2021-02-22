@@ -33,6 +33,35 @@
             <div class="row">
 
                 <div class="col-xl-12">welcome </div>
+                @can('users')
+                    <div class="col-xl-12">users </div>
+                    @endcan
+
+                @can('view_users')
+                    <div class="col-xl-12">index users </div>
+                @endcan
+
+                @can('add_users')
+                    <div class="col-xl-12">add users </div>
+                @endcan
+                @can('edit_users')
+                    <div class="col-xl-12">edit users </div>
+                @endcan
+
+                @can('privileges_users')
+                    <div class="col-xl-12">privileges users </div>
+                @endcan
+
+                @can('cities')
+                    <div class="col-xl-12">cities </div>
+                @endcan
+
+                @can('view cities')
+                    <div class="col-xl-12">view cities </div>
+                @endcan
+                @can('add city')
+                    <div class="col-xl-12">add city </div>
+                @endcan
 {{--                <div class="col-xl-4">--}}
 
 {{--                    <!--begin:: Widgets/Top Products-->--}}

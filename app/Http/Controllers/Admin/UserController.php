@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Users\ChangePermissionUserRequest;
 use App\Http\Requests\Admin\Users\DeleteUserRequest;
 use App\Http\Requests\Admin\Users\FetchUserRequest;
+use App\Http\Requests\Admin\Users\ShowPermissionUserRequest;
 use App\Http\Requests\Admin\Users\UpdateUserRequest;
 use App\Http\Requests\Admin\Users\StoreUserRequest;
 use App\User;
@@ -59,7 +61,7 @@ class UserController extends Controller
         return view('Admin.Users.show' , compact('data'));
     }
 
-    public function store(StoreUserRequest $request) {
+    public function add(StoreUserRequest $request) {
         $data = array();
         $user = new User();
         $user->name = $request->name;
@@ -83,7 +85,7 @@ class UserController extends Controller
 
     }
 
-    public function fetchById(FetchUserRequest $request) {
+    public function edit(FetchUserRequest $request) {
         $id = $request->input('id');
         $user = User::where('id' ,$id)->first();
         return $user;
@@ -135,21 +137,76 @@ class UserController extends Controller
     public function delete(DeleteUserRequest $request) {
         $data = array();
         $id = $request->input('id');
-        $user = User::where('id' ,$id)->delete();
+        $user = User::findOrFail($id);
 
-        $data['status'] = true;
-        $data['msg'] = "تم حذف البيانات بنجاح";
+        $delete = $user->delete();
+        if($delete) {
+            $data['status'] = true;
+            $data['msg'] = "تم حذف البيانات بنجاح";
+        }else {
+            $data['status'] = false;
+            $data['msg'] = "خطأ عام لم تتم عملية الحذف";
+        }
+
 
         return $data;
 //        return $user;
     }
 
+    public function getPermissions(ShowPermissionUserRequest $request) {
+
+        $id = $request->input('id');
+
+        $user = User::find($id);
+
+//        return $user;
+//
+       $permission = Permission::select('name' , 'name_ar' , 'group' , 'group_id')->orderBy("group_id" , "asc")->get()->groupBy("group_id");
+
+        $permissionNames = $user->getPermissionNames()->toArray();
+
+//        return $permissionNames;
+
+
+        return View::make('Admin.Users.sub.permissionsList')->with(['permission' => $permission , 'permissionNames' => $permissionNames ])->render();
+
+
+    }
+
+    public function changePermissions(ChangePermissionUserRequest $request) {
+        $data = array();
+        $id = $request->input('id');
+        $permissions = $request->input('permission');
+        $user = User::find($id);
+       $check = $user->syncPermissions($permissions);
+       if($check) {
+           $data['status'] = true;
+           $data['msg'] = "تم إضافة الصلاحيات بنجاح";
+       }else {
+           $data['status'] = false;
+           $data['msg'] = "فشلت عملية إضافة صلاحية";
+       }
+        return $data;
+    }
+
     public function addRole() {
-        $role = Role::create(['name' => 'admin']);
+//        $role = Role::create(['name' => 'admin']);
+        $role1 = Role::create(['name' => 'writer']);
+        $role1->givePermissionTo('view users');
+        $role1->givePermissionTo('edit users');
+
+        $role2 = Role::create(['name' => 'admin']);
+        $role2->givePermissionTo('view users');
+        $role2->givePermissionTo('add users');
+        $role2->givePermissionTo('delete users');
+        $role3 = Role::create(['' => 'super-admin']);
     }
 
     public function addPermission() {
-        $permission = Permission::create(['name' => 'edit users']);
+        Permission::create(['name' => 'add users']);
+        Permission::create(['name' => 'edit users']);
+        Permission::create(['name' => 'delete users']);
+        Permission::create(['name' => 'view users']);
     }
 
     public function givePermissionTo() {
@@ -161,11 +218,11 @@ class UserController extends Controller
     }
 
     public function assignRole() {
-        $user = User::where('id' , 2)->first();
+        $user = User::where('id' , 3)->first();
 
-        $user->assignRole('admin');
+//        $user->assignRole('writer');
 
-//        $user->givePermissionTo('add users');
+        $user->givePermissionTo(['add users']);
 
 
     }
