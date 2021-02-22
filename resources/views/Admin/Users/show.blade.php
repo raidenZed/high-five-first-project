@@ -42,6 +42,8 @@
 
                 <div class="col-xl-12">
                     <div class="" id="tableBody">
+                        @include('admin.users.dataTable')
+                        @if(false)
                         <table class="table table-bordered m-table">
                             <thead>
                             <tr>
@@ -113,6 +115,7 @@
                                 {!! $data->links() !!}
                             </div>
                         </div>
+                        @endif
                     </div>
                 </div>
 
@@ -200,7 +203,58 @@
                         e.preventDefault();
 
 
+                         $('.addNewpageForm').on('submit', function(e){
+                            e.preventDefault();
+                            var formData = new FormData(this);
+                            $.ajax({
+                                url: "/personal_data/add",
+                                type: "post",
+                                cache:false,
+                                contentType: false,
+                                processData: false,
+                                data: formData,
+                                success: function (data) {
+                                    $('#loading').hide();
+                                    if (data["status"] == true) {
+                                        swal({
+                                            title: "",
+                                            text: data["data"],
+                                            type: "success",
+                                            showCancelButton: false,
+                                            confirmButtonColor: "#DD6B55",
+                                            confirmButtonText: "{{trans('lang.ok')}}",
+                                            cancelButtonText: "{{trans('lang.cancel')}}",
+                                            closeOnConfirm: true,
+                                            closeOnCancel: true
+                                        });
+                                        var url = $(this).attr('href');
+                                        getData(url);
+                                        /*$(".addNewpageForm .full_name").val('');
+                                        $('#addNewpageForm').find('.rowIdUpdate').val(0);
+                                        $('.addNewpageForm .notes').val('');
+                                        $('.addNewpageForm .birth_city').val('');
+                                        $(".addNewpageForm .mobile1").val('');*/
+                                        $("#add_page").modal("hide");
+                                    } else {
+                                        swal({
+                                            title: "",
+                                            text: data["data"],
+                                            type: "error",
+                                            showCancelButton: false,
+                                            confirmButtonColor: "#DD6B55",
+                                            confirmButtonText: "{{trans('lang.ok')}}",
+                                            cancelButtonText: "{{trans('lang.cancel')}}",
+                                            closeOnConfirm: true,
+                                            closeOnCancel: true
+                                        });
 
+                                    }
+                                }
+                });
+                        })
+                        
+                        
+                        
                         // $("#m_form_1_msg").addClass("m--hide")
                         var form = $(this).closest("form"), accct=form.attr('action') ,  t=$(this);
 
@@ -774,13 +828,15 @@
 
 
             function getData(url , counter , currentPage , newPage) {
+             var newPage = $('#newPage').val();
+             var currentPage = $('#currentPage').val();
+             var newPage = $('#counter').val();
+             
                 $.ajax({
                     url: url,
                     data: {counter: counter , currentPage: currentPage , newPage: newPage},
                     type: 'get',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr("content")
-                    },
+                   
                     beforeSend: function ( xhr ) {
                         mApp.block("#tableBody .table" , {
                             overlayColor:"#000000",
